@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web File Explorer</title>
+    
+    <!-- Premium Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="ph-bold ph-folder-open"></i> Explorer</h2>
+            </div>
+            <div class="sidebar-menu">
+                <span class="menu-label">QUICK ACCESS</span>
+                <ul id="drives-list">
+                    <!-- Drives injected here via JS -->
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Navigation Bar -->
+            <header class="top-nav">
+                <div class="nav-controls">
+                    <button id="up-btn" class="icon-btn" title="Go Up"><i class="ph-bold ph-arrow-up"></i></button>
+                    <button id="refresh-btn" class="icon-btn" title="Refresh"><i class="ph-bold ph-arrows-clockwise"></i></button>
+                </div>
+                <div class="path-bar">
+                    <input type="text" id="path-input" placeholder="Loading Path...">
+                </div>
+            </header>
+
+            <!-- File Grid/List Area -->
+            <div class="content-area">
+                <div class="list-header">
+                    <div class="col-name">Name</div>
+                    <div class="col-date">Date Modified</div>
+                    <div class="col-type">Type</div>
+                    <div class="col-size">Size</div>
+                </div>
+                <div class="file-list" id="file-list">
+                    <!-- Files injected here via JS -->
+                    <div class="loading-state">
+                        <i class="ph ph-spinner ph-spin"></i> Loading...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Action Footer -->
+            <footer class="action-footer">
+                <div class="left-actions">
+                    <button id="rename-btn" class="btn btn-secondary" disabled>
+                        <i class="ph ph-text-t"></i> Rename Selected
+                    </button>
+                </div>
+                <div class="right-actions">
+                    <button id="organize-btn" class="btn btn-primary">
+                        <i class="ph ph-magic-wand"></i> Organize by Extension
+                    </button>
+                </div>
+            </footer>
+        </main>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
