@@ -1,5 +1,6 @@
 let currentPath = '';
 let selectedFilePath = null;
+let clipboardPath = null;
 
 // DOM Elements
 const _drivesList = document.getElementById('drives-list');
@@ -7,7 +8,11 @@ const _fileList = document.getElementById('file-list');
 const _pathInput = document.getElementById('path-input');
 const _upBtn = document.getElementById('up-btn');
 const _refreshBtn = document.getElementById('refresh-btn');
+const _newFileBtn = document.getElementById('new-file-btn');
+const _newFolderBtn = document.getElementById('new-folder-btn');
 const _renameBtn = document.getElementById('rename-btn');
+const _copyBtn = document.getElementById('copy-btn');
+const _pasteBtn = document.getElementById('paste-btn');
 const _organizeBtn = document.getElementById('organize-btn');
 
 // Initialization
@@ -17,12 +22,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // Event Listeners
     _upBtn.addEventListener('click', navigateUp);
     _refreshBtn.addEventListener('click', () => loadFiles(currentPath));
+    _newFileBtn.addEventListener('click', () => createNewItem(false));
+    _newFolderBtn.addEventListener('click', () => createNewItem(true));
     
     _pathInput.addEventListener('keydown', (e) => {
         if(e.key === 'Enter') loadFiles(_pathInput.value);
     });
 
     _renameBtn.addEventListener('click', renameSelected);
+    _copyBtn.addEventListener('click', copySelected);
+    _pasteBtn.addEventListener('click', pasteHere);
     _organizeBtn.addEventListener('click', organizeDirectory);
 });
 
@@ -99,6 +108,7 @@ function renderFiles(contents) {
     _fileList.innerHTML = '';
     selectedFilePath = null;
     _renameBtn.disabled = true;
+    _copyBtn.disabled = true;
     
     if(contents.length === 0) {
          _fileList.innerHTML = `<div class="loading-state" style="color:var(--text-secondary)">This folder is empty.</div>`;
@@ -124,6 +134,7 @@ function renderFiles(contents) {
             div.classList.add('selected');
             selectedFilePath = item.path;
             _renameBtn.disabled = false;
+            _copyBtn.disabled = false;
         };
         
         // Double click to open/navigate
@@ -208,6 +219,54 @@ async function organizeDirectory() {
             loadFiles(currentPath); // refresh
         } else {
             alert("Organize failed: " + data.error);
+        }
+    } catch(e) { console.error(e); }
+}
+
+async function createNewItem(isFolder) {
+    if(!currentPath) return;
+    const typeName = isFolder ? "Folder" : "File";
+    // For a file, we can optionally provide a default extension
+    const defaultName = isFolder ? "New Folder" : "New File.txt";
+    const name = prompt(`Enter new ${typeName} name:`, defaultName);
+    if(name) {
+        try {
+            const res = await fetch('/api/create', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({path: currentPath, name: name, is_folder: isFolder})
+            });
+            if(res.ok) {
+                loadFiles(currentPath);
+            } else {
+                const err = await res.json();
+                alert(`Create ${typeName} failed: ` + err.error);
+            }
+        } catch(e) { console.error(e); }
+    }
+}
+
+function copySelected() {
+    if(!selectedFilePath) return;
+    clipboardPath = selectedFilePath;
+    const pasteBtn = document.getElementById('paste-btn');
+    if (pasteBtn) pasteBtn.disabled = false;
+}
+
+async function pasteHere() {
+    if(!clipboardPath || !currentPath) return;
+    
+    try {
+        const res = await fetch('/api/paste', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({source_path: clipboardPath, destination_dir: currentPath})
+        });
+        if(res.ok) {
+            loadFiles(currentPath);
+        } else {
+            const err = await res.json();
+            alert("Paste failed: " + err.error);
         }
     } catch(e) { console.error(e); }
 }

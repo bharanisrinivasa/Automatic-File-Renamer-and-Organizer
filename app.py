@@ -114,6 +114,40 @@ def organize_files_by_extension(directory_path):
         return False, str(e)
 
 
+def create_item(directory, name, is_folder):
+    new_path = os.path.join(directory, name)
+    try:
+        if is_folder:
+            os.makedirs(new_path, exist_ok=True)
+        else:
+            with open(new_path, 'a'):
+                pass
+        return True, None
+    except Exception as e:
+        return False, str(e)
+
+def copy_item(source_path, destination_dir):
+    try:
+        import shutil
+        name = os.path.basename(source_path)
+        dest_path = os.path.join(destination_dir, name)
+        
+        # Handle duplicate naming
+        base, ext = os.path.splitext(name)
+        counter = 1
+        while os.path.exists(dest_path):
+            dest_path = os.path.join(destination_dir, f"{base} ({counter}){ext}")
+            counter += 1
+            
+        if os.path.isdir(source_path):
+            shutil.copytree(source_path, dest_path)
+        else:
+            shutil.copy2(source_path, dest_path)
+        return True, None
+    except Exception as e:
+        return False, str(e)
+
+
 # ==========================================
 # 2. FLASK WEB SERVER API
 # ==========================================
@@ -185,13 +219,25 @@ def api_organize():
     success, err = organize_files_by_extension(request.json.get('path'))
     return jsonify({"success": True, "message": err}) if success else (jsonify({"error": err}), 500)
 
+@app.route('/api/create', methods=['POST'])
+def api_create():
+    data = request.json
+    success, err = create_item(data.get('path'), data.get('name'), data.get('is_folder', False))
+    return jsonify({"success": True}) if success else (jsonify({"error": err}), 500)
+
+@app.route('/api/paste', methods=['POST'])
+def api_paste():
+    data = request.json
+    success, err = copy_item(data.get('source_path'), data.get('destination_dir'))
+    return jsonify({"success": True}) if success else (jsonify({"error": err}), 500)
+
 
 # ==========================================
 # 3. PYWEBVIEW APP LAUNCHER
 # ==========================================
 
 def start_flask(port):
-    app.run(host='127.0.0.1', port=port, debug=False, use_reloader=False)
+    app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
 
 if __name__ == '__main__':
     PORT = 5050
